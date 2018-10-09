@@ -16,8 +16,8 @@ library(Hmisc)
 
 # Data load ---------------------------------------------------------
 
-load(file = "data/viz.RData")
-load(file = "data/class_mails.RData")
+load(file = "../data/viz.RData")
+load(file = "../data/class_mails.RData")
 
 # Define UI for application that draws a histogram
 ui <- fluidPage(
@@ -70,21 +70,14 @@ server <- function(input, output) {
           filter_mail$Month_Name %>%
             ordered(levels = c("Jan","Feb","Mar","Apr","May","Jun",
                                "Jul","Aug","Sep","Oct","Nov","Dec"))
-      }
-
-      if (input$range == "Within Month") {
+      } else if (input$range == "Within Month") {
          x <- filter_mail$Day %>% ordered(levels = seq(max(31)))
-      }
-
-      if (input$range == "Within Week") {
+      } else if (input$range == "Within Week") {
          x <-
           filter_mail$Weekday %>%
-            ordered(levels = c("Monday", "Tuesday", "Wednesday",
-                               "Thursday", "Friday", "Saturday",
-                               "Sunday"))
-      }
-
-      if (input$range == "Within Day") {
+            ordered(levels = c("Monday", "Tuesday", "Wednesday", "Thursday",
+                               "Friday", "Saturday", "Sunday"))
+      } else if (input$range == "Within Day") {
          x <- filter_mail$Hour %>% ordered(levels = seq(max(24)))
       }
 
@@ -115,7 +108,7 @@ server <- function(input, output) {
     auxC <- node %>% filter(label != input$worker)
     node <-
       rbind(aux, auxC) %>%
-        data.frame(
+        tibble(
           color =
             sapply("lightBlue",
                    function(x) rep(x,nrow(node) - 1)) %>%

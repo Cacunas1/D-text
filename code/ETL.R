@@ -26,15 +26,19 @@ class_mails$To <- ifelse(class_mails$To == "", "Unknown", class_mails$To)
 df <- class_mails$To %>% str_split(',')
 
 nCol <- vapply(df, length, 0) %>% max()
+
 df %<>% lapply(function(row) c(row, rep(NA, nCol - length(row))))
 df <- matrix(unlist(df), nrow = length(df), ncol = nCol, byrow = TRUE)
 df %<>% data.frame(stringsAsFactors = F) %>% as.tibble()
 
 df %<>% cbind(ID = class_mails$ID)
 df %<>% gather(key = var_, value = c(X1, X2, X3, X4, X5), -ID)
+
 names(df)[3] <- "to_single"
+
 df %<>% filter(nchar(to_single) > 2)
 df[2] <- NULL
+
 mails <- merge(x = class_mails, y = df, by = "ID")
 mails <- mails[1:1200,]
 
