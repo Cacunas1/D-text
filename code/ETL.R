@@ -40,7 +40,7 @@ df %<>% filter(nchar(to_single) > 2)
 df[2] <- NULL
 
 mails <- merge(x = class_mails, y = df, by = "ID")
-mails <- mails[1:1200,]
+
 
 nodes <- data.frame(nodos = union(unique(mails$From), unique(mails$to_single)))
 
@@ -56,15 +56,21 @@ nodes <- tibble(id = rownames(nodes) %>% as.integer(),
                 email = nodes$email)
 
 # Subset mails to avoid garbage
-data <- mails[1:1200,]
+data <- mails
 
-data %<>% mutate(id_f = match(data$username_from, nodes$label))
-data %<>% mutate(id_t = match(data$username_to, nodes$label))
-data %<>% select(id_f, id_t, is_suspiscius) %>% unique()
+data %<>% mutate(id_f=match(data$username_from,sapply(strsplit(as.character(nodes$emails), split='@', fixed=TRUE), function(x) (x[1]))))
+data %<>% mutate(id_t=match(data$username_to,sapply(strsplit(as.character(nodes$emails), split='@', fixed=TRUE), function(x) (x[1]))))
+data %<>% select(id_f,id_t,is_suspiscius) 
 
 nodes[-c(1, 3)] %<>%
   lapply(gsub, pattern = ".", replacement = " ", fixed = TRUE)
 nodes$label %<>% str_to_title()
+
+#Changing the users
+nodes$nodos <- gsub('Phillip Allen', 'Charles McGill', nodes$nodos)
+nodes$nodos <- gsub('Imelda Frayre', 'Howard Hamlin', nodes$nodos)
+nodes$nodos <- gsub('Mccormick', 'Ignacio Garcia', nodes$nodos)
+                                                    
 data$color <- ifelse(data$is_suspiscius == 1, "red", "lightblue")
 
 colnames(data)[3] <- "is_s"
