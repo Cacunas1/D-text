@@ -41,14 +41,16 @@ df[2] <- NULL
 
 mails <- merge(x = class_mails, y = df, by = "ID")
 
-
 nodes <- data.frame(nodos = union(unique(mails$From), unique(mails$to_single)))
 
 # Cleaning data (names) ---------------------------------------------------
 
 nodes["email"] <- nodes
 nodes$nodos <- sub("@.*", "", nodes$nodos)
-
+nodes[1] <- lapply(nodes[1], gsub, pattern = ".", replacement = " ", fixed = TRUE)
+nodes[,1] <- str_to_title(nodes[,1])
+nodes %<>% distinct(email,.keep_all = TRUE)
+               
 # Making it nice ----------------------------------------------------------
 
 nodes <- tibble(id = rownames(nodes) %>% as.integer(),
@@ -58,13 +60,9 @@ nodes <- tibble(id = rownames(nodes) %>% as.integer(),
 # Subset mails to avoid garbage
 data <- mails
 
-data %<>% mutate(id_f=match(data$username_from,sapply(strsplit(as.character(nodes$emails), split='@', fixed=TRUE), function(x) (x[1]))))
-data %<>% mutate(id_t=match(data$username_to,sapply(strsplit(as.character(nodes$emails), split='@', fixed=TRUE), function(x) (x[1]))))
+data %<>% mutate(id_f=match(data$username_from,sapply(strsplit(as.character(nodes$email), split='@', fixed=TRUE), function(x) (x[1]))))
+data %<>% mutate(id_t=match(data$username_to,sapply(strsplit(as.character(nodes$email), split='@', fixed=TRUE), function(x) (x[1]))))
 data %<>% select(id_f,id_t,is_suspiscius) 
-
-nodes[-c(1, 3)] %<>%
-  lapply(gsub, pattern = ".", replacement = " ", fixed = TRUE)
-nodes$label %<>% str_to_title()
 
 #Changing the users
 nodes$nodos <- gsub('Phillip Allen', 'Charles McGill', nodes$nodos)
