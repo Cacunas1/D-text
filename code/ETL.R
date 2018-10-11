@@ -53,21 +53,27 @@ nodes$email %<>% trimws(which = "both")
 nodes %<>% distinct(email,.keep_all = TRUE)
                
 # Making it nice ----------------------------------------------------------
+nodes <- tibble(id= rownames(nodes),
+                    nodos= nodes$nodos, 
+                    emails= nodes$Emails)
 
-nodes <- tibble(id = rownames(nodes) %>% as.integer(),
-                label = nodes$nodos,
-                email = nodes$email)
+nodes$nodos <- gsub('Phillip Allen', 'Charles McGill', nodes$nodos)
+nodes$nodos <- gsub('Patti99', 'Howard Hamlin', nodes$nodos)
+nodes$nodos <- gsub('Jeffrey Hodge', 'Ignacio Garcia', nodes$nodos)
+nodes$nodos <- gsub('Jacquestc', 'Miguel Hernandez', nodes$nodos)
 
 # Subset mails to avoid garbage
+
 data <- mails
-data %<>% mutate(id_f=match(data$username_from,sapply(strsplit(as.character(nodes$email), split='@', fixed=TRUE), function(x) (x[1]))))
-data %<>% mutate(id_t=match(data$username_to,sapply(strsplit(as.character(nodes$email), split='@', fixed=TRUE), function(x) (x[1]))))
+data %<>% mutate(id_f=match(data$username_from,sapply(strsplit(as.character(nodes$emails), split='@', fixed=TRUE), function(x) (x[1]))))
+data %<>% mutate(id_t=match(data$username_to,sapply(strsplit(as.character(nodes$emails), split='@', fixed=TRUE), function(x) (x[1]))))
 data %<>% select(id_f,id_t,is_suspiscius) 
 
-#Changing the users
-nodes$nodos <- gsub('Phillip Allen', 'Charles McGill', nodes$nodos)
-nodes$nodos <- gsub('Imelda Frayre', 'Howard Hamlin', nodes$nodos)
-nodes$nodos <- gsub('Mccormick', 'Ignacio Garcia', nodes$nodos)
+data$id_f <- as.integer(gsub(296 , 424 , data$id_f ))
+data$id_f <- as.integer(gsub(294 , 424 , data$id_f ))
+data$id_f <- as.integer(gsub(275 , 370 , data$id_f ))
+data$id_f <- as.integer(gsub(286 , 370 , data$id_f ))
+data$id_f <- as.integer(gsub(169 , 346 , data$id_f ))
                                                     
 data$color <- ifelse(data$is_suspiscius == 1, "red", "lightblue")
 
