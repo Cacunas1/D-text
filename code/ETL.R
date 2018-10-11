@@ -16,7 +16,7 @@ file_path <- "data/enron_training.RData"
 load(file = file_path)
 
 class_mails$Date %<>% ymd_hms()
-
+class_mails %<>% distinct()
 class_mails <- as.tibble(class_mails)
 
 # Split the receptor ------------------------------------------------------
