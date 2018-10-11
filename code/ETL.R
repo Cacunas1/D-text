@@ -74,6 +74,7 @@ data$id_f <- as.integer(gsub(294 , 424 , data$id_f ))
 data$id_f <- as.integer(gsub(275 , 370 , data$id_f ))
 data$id_f <- as.integer(gsub(286 , 370 , data$id_f ))
 data$id_f <- as.integer(gsub(169 , 346 , data$id_f ))
+data$id_f <- as.integer(gsub(127 , 412 , data$id_f ))
                                                     
 data$color <- ifelse(data$is_suspiscius == 1, "red", "lightblue")
 
