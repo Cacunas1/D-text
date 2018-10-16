@@ -19,9 +19,9 @@ class_mails$Date %<>% ymd_hms()
 
 class_mails <- as.tibble(class_mails)
 
-class_mails %<>%
-  unique() %>%
-  filter(To != "")
+class_mails %<>% distinct()
+
+class_mails$To %<>% ifelse(. == "", "Unknown", .)
 
 class_mails$From %<>% trimws(which = "both")
 
@@ -43,35 +43,73 @@ df %<>% filter(nchar(to_single) > 2)
 df[2] <- NULL
 
 mails <- merge(x = class_mails, y = df, by = "ID")
-#mails <- mails[1:1200,]
 
-nodes <- data.frame(nodos = union(unique(mails$From), unique(mails$to_single)))
+users <- data.frame(name = union(unique(mails$From), unique(mails$to_single)))
+users$name %<>% sort()
 
 # Cleaning data (names) ---------------------------------------------------
 
-nodes["email"] <- nodes
-nodes$nodos <- sub("@.*", "", nodes$nodos)
+users$email <- users$name %>% trimws(which = "both")
+users$name %<>% sub("@.*", "", .)
+users$name %<>% lapply(gsub, pattern = ".", replacement = " ", fixed = TRUE)
+users$name %<>% str_to_title()
+users %<>% distinct(email, .keep_all = T)
 
 # Making it nice ----------------------------------------------------------
 
-nodes <- tibble(id = rownames(nodes) %>% as.integer(),
-                label = nodes$nodos,
-                email = nodes$email)
+users$id <- rownames(users) %>% as.integer()
 
-nodes <- nodes[order(nodes$label),]
+# Substitutions for hardcoded case
+users$name %<>% gsub('Phillip Allen', 'Charles McGill', .)
+users$name %<>% gsub('Patti99', 'Howard Hamlin', .)
+users$name %<>% gsub('Jeffrey Hodge', 'Ignacio Garcia', .)
+users$name %<>% gsub('Jacquestc', 'Miguel Hernandez', .)
 
 # Subset mails to avoid garbage
-data <- mails
+connections <- mails
 
-data %<>% mutate(from = match(data$username_from, nodes$label))
-data %<>% mutate(to = match(data$username_to, nodes$label))
-data %<>% select(from, to, is_suspiscius) %>% unique()
+connections %<>%
+  mutate(sender = match(connections$username_from,
+                        sapply(strsplit(as.character(users$email),
+                                        split = '@', fixed = T),
+                               function(x) (x[1]))))
+connections %<>%
+  mutate(receiver = match(connections$username_to,
+                          sapply(strsplit(as.character(users$email),
+                                          split = '@', fixed = T),
+                                 function(x) (x[1]))))
+connections %<>% select(sender, receiver, is_suspiscius)# %>% unique()
 
-nodes["label"] %<>%
-  lapply(gsub, pattern = ".", replacement = " ", fixed = TRUE)
-nodes$label %<>% str_to_title()
-data$color <- ifelse(data$is_suspiscius == 1, "red", "lightblue")
+connections$sender %<>% as.integer(gsub(296 , 424 , .))
+connections$sender %<>% as.integer(gsub(294 , 424 , .))
+connections$sender %<>% as.integer(gsub(275 , 370 , .))
+connections$sender %<>% as.integer(gsub(286 , 370 , .))
+connections$sender %<>% as.integer(gsub(169 , 346 , .))
+connections$sender %<>% as.integer(gsub(127 , 412 , .))
 
-colnames(data)[3] <- "is_s"
+connections$color <- ifelse(connections$is_suspiscius == 1, "red", "lightblue")
 
-save(nodes, data, class_mails, file = "data/viz.RData")
+colnames(connections)[3] <- "suspicious"
+
+connections %<>% arrange(desc(suspicious))
+
+connections_summ <- connections %>%
+  group_by(sender, receiver) %>%
+  summarise(count = n())
+connections_dist <- distinct(connections, sender, receiver, .keep_all = T)
+connections <- as.data.frame(merge(connections_dist, connections_summ))
+
+#Email to User Name
+class_mails$From_New <- sub("@.*", "", class_mails$From)
+class_mails$From_New <- lapply(class_mails$From_New, gsub, pattern = ".", replacement = " ", fixed = TRUE)
+class_mails$From_New <- str_to_title(class_mails$From_New)
+
+#changing Names
+class_mails$From_New %<>% gsub('Phillip Allen', 'Charles McGill', .)
+class_mails$From_New %<>% gsub('Patti99', 'Howard Hamlin', .)
+class_mails$From_New %<>% gsub('Jeffrey Hodge', 'Ignacio Garcia', .)
+class_mails$From_New %<>% gsub('Jacquestc', 'Miguel Hernandez', .)
+
+class_mails %<>% filter(To != "Unknown")
+
+save(users, connections, class_mails, file = "data/viz.RData")
